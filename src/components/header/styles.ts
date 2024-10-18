@@ -26,25 +26,12 @@ export const NavBar = styled.nav`
     align-items: center;
     gap: 1.5rem;
 
-    .space-x-4 > :not([hidden]) ~ :not([hidden]) {
-        --tw-space-x-reverse: 0;
-        margin-right: calc(1rem /* 16px */ * var(--tw-space-x-reverse));
-        margin-left: calc(1rem /* 16px */ * calc(1 - var(--tw-space-x-reverse)));
-    }
-
-    @media (min-width: 1024px) {
-        .lg\:space-x-6 > :not([hidden]) ~ :not([hidden]) {
-            --tw-space-x-reverse: 0;
-            margin-right: calc(1.5rem /* 24px */ * var(--tw-space-x-reverse));
-            margin-left: calc(1.5rem /* 24px */ * calc(1 - var(--tw-space-x-reverse)));
-        }
-}
 `
 export const TopLeft = styled.div`
     margin-left: auto;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 1rem;
     color: ${props => props.theme.secondary};
 `
 
@@ -52,27 +39,18 @@ export const NavBarLink = styled(NavLink)`
     display: flex;
     align-items: center;
     gap: .375rem;
-    color: ${props => props.theme.secondary};
     text-decoration: none;
 
-    .text-sm {
-        font-size: 0.875rem;
-        line-height: 1.25rem;
-    }
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    
+    font-weight: 500;
+    
 
-    .font-medium {
-        font-weight: 500;
-    }
+   color: ${props => props.theme.mutedForeground};
+    
 
-    .text-muted-foreground {
-        color: ${props => props.theme.mutedForeground};
-    }
-
-    .hover\:text-foreground:hover {
-        color: ${props => props.theme.foreground};
-    }
-
-    .data-\[current\=true\]\:text-foreground[data-current=true] {
+    :hover {
         color: ${props => props.theme.foreground};
     }
 `

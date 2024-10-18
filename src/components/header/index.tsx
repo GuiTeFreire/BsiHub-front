@@ -1,6 +1,7 @@
 import { Book, Home, Tally1, Upload } from "lucide-react";
 import { Divider, Head, HeaderContainer, NavBar, NavBarLink, TopLeft } from "./styles";
 import { Button } from "../ui/button";
+import { AccountMenu } from "../account-menu";
 
 export function Header() {
     return (
@@ -16,13 +17,12 @@ export function Header() {
                         <Home color="hsl(221.2, 83.2%, 53.3%)" />Quadro de Atividades
                     </NavBarLink>
                 </NavBar>
-                <TopLeft>Upload Histórico
-                    <Button size="icon" variant="link" title="Upload PDF">
+                <TopLeft>
+                    <Button size="icon" variant="link" title="Upload Histórico">
                         <Upload color="hsl(221.2, 83.2%, 53.3%)" />
                     </Button>
                     <div>
-                        <div>Guilherme Freire</div>
-                        <div>CR: 8.00</div>
+                        <AccountMenu />
                     </div>
                 </TopLeft>
             </HeaderContainer>
