@@ -5,6 +5,7 @@ import { AppLayout } from './pages/_layouts/app'
 import { AuthLayout } from './pages/_layouts/auth'
 import { SignUp } from './pages/auth/sign-up'
 import { ToDoList } from './pages/app/todo-list'
+import { Classes } from './pages/app/classes/classes'
 
 export const router = createBrowserRouter([
     {
@@ -16,6 +17,11 @@ export const router = createBrowserRouter([
         path: '/board',
         element: <AppLayout />,
         children: [{ path: '/board', element: <ToDoList /> }],
+    },
+    {
+        path: '/classes',
+        element: <AppLayout />,
+        children: [{ path: '/classes', element: <Classes /> }],
     },
     {
         path: '/',
