@@ -19,7 +19,6 @@ export function Classes() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead></TableHead>
                                     <TableHead>Código</TableHead>
                                     <TableHead>Nome</TableHead>
                                     <TableHead>Período</TableHead>
@@ -27,6 +26,8 @@ export function Classes() {
                                     <TableHead>Carga Horaria</TableHead>
                                     <TableHead>Créditos</TableHead>
                                     <TableHead>Obrigatoriedade</TableHead>
+                                    <TableHead></TableHead>
+                                    <TableHead></TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
