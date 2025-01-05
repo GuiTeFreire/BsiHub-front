@@ -1,6 +1,8 @@
+import { registerStudent } from "@/api/register-student"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@radix-ui/react-label"
+import { useMutation } from "@tanstack/react-query"
 import { Helmet } from "react-helmet-async"
 import { useForm } from 'react-hook-form'
 import { Link, useNavigate } from "react-router-dom"
@@ -12,6 +14,7 @@ const signUpForm = z.object({
     studentName: z.string().min(3),
     studentId: z.string().length(11).regex(/^\d{11}$/, { message: "A matrícula deve conter apenas números." }),
     email: z.string().email(),
+    password: z.string().min(6),
 })
 
 type SignUpForm = z.infer<typeof signUpForm>
@@ -21,14 +24,22 @@ export function SignUp() {
 
     const { register, handleSubmit, formState: { isSubmitting } } = useForm<SignUpForm>()
 
+    const { mutateAsync: registerStudentFn } = useMutation ({
+        mutationFn: registerStudent,
+    })
     async function handleSignUp(data: SignUpForm) {
         try {
-            await new Promise(resolve => setTimeout(resolve, 2000))
+            await registerStudentFn({
+                nome: data.studentName,
+                matricula: data.studentId,
+                email: data.email,
+                senha: data.password,
+            })
             
             toast.success('Cadastro bem-sucedido!', {
                 action: {
                     label: 'Login',
-                    onClick: () => navigate('/sign-in')
+                    onClick: () => navigate(`/sign-in?email=${data.email}`)
                 }
             })
         } catch {
@@ -58,18 +69,11 @@ export function SignUp() {
 
                     <form onSubmit={handleSubmit(handleSignUp)} className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="studentName">Seu nome</Label>
+                            <Label htmlFor="studentName">Nome</Label>
                             <Input 
                                 id="studentName" 
                                 type="text" 
                                 {...register('studentName')} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="email">Seu e-mail</Label>
-                            <Input 
-                                id="email" 
-                                type="email" 
-                                {...register('email')} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="studentId">Sua matrícula</Label>
@@ -77,6 +81,20 @@ export function SignUp() {
                                 id="studentId" 
                                 type="text" 
                                 {...register('studentId')} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="email">E-mail</Label>
+                            <Input 
+                                id="email" 
+                                type="email" 
+                                {...register('email')} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="password">Senha</Label>
+                            <Input 
+                                id="password" 
+                                type="password" 
+                                {...register('password')} />
                         </div>
 
                         <Button disabled={isSubmitting} className="w-full" type="submit">

@@ -22,7 +22,7 @@ export function Classes() {
                                     <TableHead>Código</TableHead>
                                     <TableHead>Nome</TableHead>
                                     <TableHead>Período</TableHead>
-                                    <TableHead>Categoria</TableHead>
+                                    <TableHead>Eixo</TableHead>
                                     <TableHead>Carga Horaria</TableHead>
                                     <TableHead>Créditos</TableHead>
                                     <TableHead>Obrigatoriedade</TableHead>
