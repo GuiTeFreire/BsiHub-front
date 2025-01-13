@@ -8,6 +8,7 @@ import { Classes } from './pages/app/classes/classes'
 import { AppLayout } from './pages/_layouts/app'
 import { AuthLayout } from './pages/_layouts/auth'
 import { ProtectedRoute } from './components/router/ProtectedRoute'
+import { Schedule } from './pages/app/schedule'
 
 export const router = createBrowserRouter([
   {
@@ -43,6 +44,17 @@ export const router = createBrowserRouter([
     ),
     children: [
       { path: '/classes', element: <Classes /> },
+    ],
+  },
+  {
+    path: '/schedule',
+    element: (
+      <ProtectedRoute>
+        <AppLayout />
+      </ProtectedRoute>
+    ),
+    children: [
+      { path: '/schedule', element: <Schedule /> },
     ],
   },
   {

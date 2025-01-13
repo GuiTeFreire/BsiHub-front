@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Helmet } from "react-helmet-async";
 import { ClassTableRow } from "./class-table-row";
@@ -6,6 +6,8 @@ import { ClassTableFilters } from "./class-table-filters";
 import { Pagination } from "@/components/pagination";
 import { IncludedClass } from "./included-class";
 import { useSearchParams } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export interface ClassData {
     code: string
@@ -72,8 +74,8 @@ export function Classes() {
         { code: "TMQ0008", name: "Estatística", period: "5º", mandatory: "Obrigatória" },
         // 19) Estruturas de Dados Avançadas TIN0256 O
         { code: "TIN0256", name: "Estruturas de Dados Avançadas", period: "", mandatory: "Optativa" },
-        // 20) Interação Humano-Computador (turma A) TIN0208 1
-        { code: "TIN0208", name: "Interação Humano-Computador (turma A)", period: "1º", mandatory: "Obrigatória" },
+        // 20) Interação Humano-Computador  TIN0208 1
+        { code: "TIN0208", name: "Interação Humano-Computador ", period: "1º", mandatory: "Obrigatória" },
         // 21) Linguagens e Paradigmas de Programação TIN0226 3
         { code: "TIN0226", name: "Linguagens e Paradigmas de Programação", period: "3º", mandatory: "Obrigatória" },
         // 22) Redes de Computadores TIN0237 4
@@ -96,16 +98,14 @@ export function Classes() {
         { code: "TIN0284", name: "Tópicos em Processos de Software", period: "", mandatory: "Optativa" },
         // 31) Gerência de Projetos TIN0231 5
         { code: "TIN0231", name: "Gerência de Projetos", period: "5º", mandatory: "Obrigatória" },
-        // 32) Algoritmos e Programação TIN0222 1
-        { code: "TIN0222", name: "Algoritmos e Programação", period: "1º", mandatory: "Obrigatória" },
         // 33) Ciência de Dados TIN0234 6
         { code: "TIN0234", name: "Ciência de Dados", period: "6º", mandatory: "Obrigatória" },
-        // 34) Gestão de Processos de Negócios (turma A) TIN0219 2
-        { code: "TIN0219", name: "Gestão de Processos de Negócios (turma A)", period: "2º", mandatory: "Obrigatória" },
+        // 34) Gestão de Processos de Negócios  TIN0219 2
+        { code: "TIN0219", name: "Gestão de Processos de Negócios ", period: "2º", mandatory: "Obrigatória" },
         // 35) Governança de Tecnologia da Informação TIN0220 5
         { code: "TIN0220", name: "Governança de Tecnologia da Informação", period: "5º", mandatory: "Obrigatória" },
-        // 36) Informação e Sociedade (turma A) TIN0207 1
-        { code: "TIN0207", name: "Informação e Sociedade (turma A)", period: "1º", mandatory: "Obrigatória" },
+        // 36) Informação e Sociedade  TIN0207 1
+        { code: "TIN0207", name: "Informação e Sociedade ", period: "1º", mandatory: "Obrigatória" },
         // 37) Metodologia Científica e Tecnológica TIN0211 5
         { code: "TIN0211", name: "Metodologia Científica e Tecnológica", period: "5º", mandatory: "Obrigatória" },
         // 38) Atividades de Extensão I TIN0306 A
@@ -158,7 +158,6 @@ export function Classes() {
     }
 
     // Filtro por período
-    // Se item.period === "3º" mas período=3, faça replace("º","") ou outra lógica
     if (periodo && periodo !== "all") {
         filteredData = filteredData.filter(
         (item) => item.period.replace("º", "") === periodo
@@ -176,6 +175,20 @@ export function Classes() {
     const startIndex = pageIndex * perPage
     const endIndex = startIndex + perPage
     const currentPageData = filteredData.slice(startIndex, endIndex)
+
+      // Carregar do localStorage ao montar
+    useEffect(() => {
+        const stored = localStorage.getItem("myGrade")
+        if (stored) {
+        setSelectedClasses(JSON.parse(stored))
+        }
+    }, [])
+
+    // Função para salvar no localStorage (chamada ao clicar em "Salvar grade")
+    function handleSaveGrade() {
+        localStorage.setItem("myGrade", JSON.stringify(selectedClasses))
+        toast.success("Grade salva com sucesso!") // Você pode usar toast, etc.
+    }
 
     return (
         <>
@@ -241,6 +254,10 @@ export function Classes() {
                   </TableBody>
                 </Table>
               </div>
+
+              <Button variant="default" onClick={handleSaveGrade}>
+                Salvar grade
+              </Button>
             </div>
           </div>
         </>

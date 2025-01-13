@@ -9,6 +9,10 @@ export function Home() {
         navigate('/classes');
     };
 
+    const handleNavigateToSchedule = () => {
+        navigate('/schedule');
+    };
+
     function handleLogout() {
         localStorage.removeItem("alunoLogado");
         localStorage.removeItem("sessionExpiresAt");
@@ -22,7 +26,7 @@ export function Home() {
                 <h1 className="text-6xl font-bold">Bem-vind@!</h1>
                 <div className="text-accent-foreground flex flex-col justify-center gap-8">
                     <Button className="w-full" size={"lg"} onClick={handleNavigateToClasses}>Montar grade horária</Button>
-                    <Button className="w-full" size={"lg"}>Gerenciar disciplinas</Button>
+                    <Button className="w-full" size={"lg"} onClick={handleNavigateToSchedule}>Gerenciar disciplinas</Button>
                     <Button className="w-full" size={"lg"} variant="destructive" onClick={handleLogout}>
                         Sair
                     </Button>
