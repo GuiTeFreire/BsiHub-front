@@ -1,27 +1,30 @@
 import { ChevronDown, LogOut, User } from "lucide-react";
 import { Button } from "./ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { getProfile } from "@/api/get-profile";
 import { Skeleton } from "./ui/skeleton";
 import { Dialog,  } from "./ui/dialog";
-import { signOut } from "@/api/sign-out";
 import { useNavigate } from "react-router-dom";
 
 export function AccountMenu() {
     const navigate = useNavigate()
+    const storedUser = localStorage.getItem("alunoLogado");
+    const user = storedUser ? JSON.parse(storedUser) : null;
+    const userId = user?.id;
+
 
     const { data: profile, isLoading: isLoadingProfile } = useQuery({
-        queryKey:['profile'],
-        queryFn: getProfile,
+        queryKey: ["profile", userId],
+        queryFn: () => getProfile(userId),
+        enabled: !!userId,
     })
 
-    const { mutateAsync: signOutFn, isPending: isSigningOut } = useMutation({
-        mutationFn: signOut,
-        onSuccess: () => {
-            navigate('/sign-in', { replace: true })
-        }
-    })
+    function handleLogout() {
+        localStorage.removeItem("alunoLogado");
+        localStorage.removeItem("sessionExpiresAt");
+        navigate("/sign-in");
+    }
 
     return (
         <Dialog>
@@ -54,8 +57,8 @@ export function AccountMenu() {
                         )}
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />                    
-                    <DropdownMenuItem asChild className="text-rose-500 dark:text-rose-400" disabled={isSigningOut}>
-                        <button className="w-full" onClick={() => signOutFn()}>
+                    <DropdownMenuItem asChild className="text-rose-500 dark:text-rose-400">
+                        <button className="w-full" onClick={handleLogout}>
                             <LogOut className="mr-2 h-4 w-4" />
                             <span>Sair</span>
                         </button>

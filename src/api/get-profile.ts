@@ -1,14 +1,13 @@
 import { api } from "@/lib/axios";
 
 interface GetProfileResponse {
-    id: number
-    nome: string
-    email: string
-    matricula: string
+  id: number;
+  nome: string;
+  matricula: string;
+  email: string;
 }
 
-export async function getProfile() {
-    const response = await api.get<GetProfileResponse>('/api/Aluno')
-
-    return response.data
+export async function getProfile(id: number) {
+  const response = await api.get<GetProfileResponse>(`/api/Aluno/${id}`);
+  return response.data;
 }

@@ -1,10 +1,11 @@
 import { api } from "@/lib/axios"
 
 export interface SignInBody {
-    email: string
-    password: string
+    matricula: string
+    senha: string
 }
 
-export async function signIn({ email, password }: SignInBody) {
-    await api.post('/api/Aluno', { email, password }) //rota de autenticação
+export async function signIn({ matricula, senha }: SignInBody) {
+    const response = await api.post('/api/Login', { matricula, senha })
+    return response.data
 }

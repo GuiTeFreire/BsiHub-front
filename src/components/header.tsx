@@ -19,9 +19,6 @@ export function Header() {
                     <NavLink to='/board'>
                         <Kanban className="h-4 w-4" />Atividades
                     </NavLink>
-                    <NavLink to='/classes'>
-                        <Kanban className="h-4 w-4" />Disciplinas
-                    </NavLink>
                 </nav>
 
                 <div className="ml-auto flex items-center gap-2">

@@ -1,27 +1,31 @@
 import { Button } from "@/components/ui/button";
 import { TableCell, TableRow } from "@/components/ui/table";
-import { ArrowRight, X } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
-export function ClassTableRow() {
+interface ClassData {
+    code: string;
+    name: string;
+    period: string;
+    mandatory: string;
+}
+
+interface ClassTableRowProps {
+    classData: ClassData;
+    onInclude: (classData: ClassData) => void;
+}
+
+export function ClassTableRow({ classData, onInclude }: ClassTableRowProps) {
     return (
         <TableRow>
-            <TableCell>TIN0222</TableCell>
-            <TableCell>Algoritmos e Programação</TableCell>
-            <TableCell>1º</TableCell>
-            <TableCell>Desenvolvimento de Software para SI - Programação e Algoritmos</TableCell>
-            <TableCell>60h</TableCell>
-            <TableCell>2 teóricos + 1 prático</TableCell>
-            <TableCell>Obrigatória</TableCell>
+            <TableCell>{classData.code}</TableCell>
+            <TableCell>{classData.name}</TableCell>
+            <TableCell>{classData.period}</TableCell>
+            <TableCell>{classData.mandatory}</TableCell>
             <TableCell>
-                <Button variant='outline' size='xs'>
+                <Button variant='outline' size='xs' onClick={() => onInclude(classData)}>
                     <ArrowRight className="mr-2 h-3 w-3" />Incluir
                 </Button>
             </TableCell>
-            <TableCell>
-                <Button variant='ghost' size='xs'>
-                    <X className="mr-2 h-3 w-3" />Remover
-                </Button>
-            </TableCell>
         </TableRow>
-    )
+    );
 }

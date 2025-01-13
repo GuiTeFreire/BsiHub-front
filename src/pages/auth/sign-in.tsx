@@ -5,24 +5,26 @@ import { Label } from "@radix-ui/react-label"
 import { useMutation } from "@tanstack/react-query"
 import { Helmet } from "react-helmet-async"
 import { useForm } from 'react-hook-form'
-import { Link, useSearchParams } from "react-router-dom"
+import { Link, useNavigate, useSearchParams } from "react-router-dom"
 import { toast } from "sonner"
 import { z } from 'zod'
 
 
 const signInForm = z.object({
-    email: z.string().email(),
+    matricula: z.string().min(11),
     password: z.string().min(6),
 })
 
 type SignInForm = z.infer<typeof signInForm>
 
 export function SignIn() {
+    const navigate = useNavigate()
+
     const [searchParams] = useSearchParams()
 
     const { register, handleSubmit, formState: { isSubmitting } } = useForm<SignInForm>({
         defaultValues: {
-            email: searchParams.get('email') ?? '',
+            matricula: searchParams.get('matricula') ?? '',
         },
     })
 
@@ -31,17 +33,16 @@ export function SignIn() {
     })
 
     async function handleSignIn(data: SignInForm) {
-        try {
-            console.log(data)
+        try {            
+            const userData = await authenticate({ matricula: data.matricula, senha: data.password })
+            localStorage.setItem("alunoLogado", JSON.stringify(userData.aluno))
+
+            const durationMs = 30 * 60 * 1000;
+            const expiresAt = Date.now() + durationMs;
             
-            await authenticate({ email: data.email, password: data.password })
-            
-            toast.success('Um link de autenticação foi enviado para o seu e-mail. Clique para acessar seu painel.', {
-                action: {
-                    label: 'Reenviar',
-                    onClick: () => handleSignIn(data)
-                }
-            })
+            localStorage.setItem("sessionExpiresAt", expiresAt.toString());
+
+            navigate("/")
         } catch {
             toast.error('Ocorreu um erro ao tentar acessar o painel. Por favor, tente novamente.')
         }
@@ -69,8 +70,8 @@ export function SignIn() {
 
                     <form onSubmit={handleSubmit(handleSignIn)} className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="email">Seu e-mail</Label>
-                            <Input id="email" type="email" {...register('email')} />
+                            <Label htmlFor="matricula">Sua matricula</Label>
+                            <Input id="matricula" type="text" {...register('matricula')} />
                             <Label htmlFor="password">Sua senha</Label>
                             <Input id="password" type="password" {...register('password')} />
                         </div>

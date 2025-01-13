@@ -12,7 +12,7 @@ import { z } from 'zod'
 
 const signUpForm = z.object({
     studentName: z.string().min(3),
-    studentId: z.string().length(11).regex(/^\d{11}$/, { message: "A matrícula deve conter apenas números." }),
+    studentId: z.string().min(11),
     email: z.string().email(),
     password: z.string().min(6),
 })

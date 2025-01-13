@@ -8,5 +8,5 @@ export interface RegisterStudentBody {
 }
 
 export async function registerStudent({ nome, email, senha, matricula }: RegisterStudentBody) {
-    await api.post('/api/Aluno', { nome, email, senha, matricula })
+    await api.post('/api/Login/Cadastro', { nome, email, senha, matricula })
 }
