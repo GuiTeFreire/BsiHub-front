@@ -8,23 +8,23 @@ import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
 import { Trash } from "lucide-react"
 
-export interface Evaluation {
-    id: string;      // identificador (pode ser um uuid ou um timestamp)
-    name: string;    // nome da avaliação (ex: "Prova 1", "Trabalho", etc.)
-    weight: number;  // peso (ex: 2, 3, 4...)
-    grade: number;   // nota obtida (ex: 7.5)
-  }
+export interface Evaluation { // Avaliação
+    id: string                // identificador
+    name: string              // nome da avaliação
+    weight: number            // peso
+    grade: number             // nota 
+}
   
-  export interface ScheduledClass {
-    code: string;
-    name: string;
-    period: string;
-    mandatory: string;
+export interface ScheduledClass {
+    code: string      // Código da disciplina
+    name: string      // Nome da disciplina
+    period: string    // Período
+    mandatory: string // Obrigatória/Optativa/Atividade
   
-    teacher?: string;
-    absences?: number;
-    evaluations: Evaluation[];  // Lista de avaliações
-  }
+    teacher?: string            // Nome do professor
+    absences?: number           // Número de faltas
+    evaluations: Evaluation[]   // Lista de avaliações
+}
   
 
 export function Schedule() {

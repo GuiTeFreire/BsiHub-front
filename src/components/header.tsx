@@ -1,4 +1,4 @@
-import { Book, Home, Kanban } from "lucide-react";
+import { Book, Home } from "lucide-react";
 import { Separator } from "./ui/separator";
 import { NavLink } from "./nav-link";
 import { ThemeToggle } from "./theme/theme-toggle";
@@ -15,9 +15,6 @@ export function Header() {
                 <nav className="flex items-center space-x-4 lg:space-x-6">
                     <NavLink to='/'>
                         <Home className="h-4 w-4" />Início
-                    </NavLink>
-                    <NavLink to='/board'>
-                        <Kanban className="h-4 w-4" />Atividades
                     </NavLink>
                 </nav>
 

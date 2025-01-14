@@ -10,4 +10,7 @@ export type Task = {
     id: Id
     columnId: Id
     content: string
+
+    discipline?: string
+    deadline?: string
 }

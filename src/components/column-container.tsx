@@ -11,7 +11,7 @@ interface Props {
 
     createTask: (columnId: Id) => void
     deleteTask: (id: Id) => void
-    updateTask: (id: Id, content: string) => void
+    updateTask: (id: Id, partial: Partial<Task>) => void
     tasks: Task[]
 }
 
