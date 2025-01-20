@@ -3,129 +3,132 @@ import { Helmet } from "react-helmet-async"
 import { useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table"
-import { v4 as uuid } from "uuid"
 import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
-import { Trash } from "lucide-react"
+import { getStudentGrade } from "@/api/get-student-class"
+import { updateDisciplina } from "@/api/update-classes"
+import { api } from "@/lib/axios"
+import { Plus } from "lucide-react"
 
-export interface Evaluation { // Avaliação
-    id: string                // identificador
-    name: string              // nome da avaliação
-    weight: number            // peso
-    grade: number             // nota 
+interface Falta {
+  id: number
+  data: string
+  motivo: string
+  horas: string
 }
-  
+
 export interface ScheduledClass {
-    code: string      // Código da disciplina
-    name: string      // Nome da disciplina
-    period: string    // Período
-    mandatory: string // Obrigatória/Optativa/Atividade
-  
-    teacher?: string            // Nome do professor
-    absences?: number           // Número de faltas
-    evaluations: Evaluation[]   // Lista de avaliações
+  id: number
+  nome: string
+  codigo: string
+  descricao: string
+  sala: string
+  totalHoras: number
+  professor: string
+  periodo: number
+  obrigatoria: boolean
+  faltas: Falta[]
+  novaFalta: { horas: string, data: string }
 }
-  
 
 export function Schedule() {
   const navigate = useNavigate()
 
-  // Estado local: array de disciplinas, cada uma com possible `evaluations[]`
   const [mySchedule, setMySchedule] = useState<ScheduledClass[]>([])
 
-  // Carregamos do localStorage ao montar
+  const storedUser = localStorage.getItem("alunoLogado")
+  const user = storedUser ? JSON.parse(storedUser) : null
+  const alunoId = user?.id
+
   useEffect(() => {
-    const stored = localStorage.getItem("myGrade")
-    if (stored) {
-      setMySchedule(JSON.parse(stored))
-    }
-  }, [])
-
-  // Salvar as mudanças de volta no localStorage
-  function handleSaveChanges() {
-    localStorage.setItem("myGrade", JSON.stringify(mySchedule))
-    toast.success("Grade atualizada com sucesso!")
-  }
-
-  // Atualiza campo normal (teacher, absences, etc.)
-  function handleChangeField(index: number, field: keyof ScheduledClass, value: any) {
-    setMySchedule((prev) => {
-      const newSchedule = [...prev]
-      const updatedItem = { ...newSchedule[index], [field]: value }
-      newSchedule[index] = updatedItem
-      return newSchedule
-    })
-  }
-
-  // Adicionar nova avaliação a uma disciplina
-  function handleAddEvaluation(classIndex: number) {
-    setMySchedule((prev) => {
-      const newSchedule = [...prev]
-      const scheduleItem = { ...newSchedule[classIndex] }
-
-      const newEval: Evaluation = {
-        id: uuid(),
-        name: "Avaliação",
-        weight: 1,
-        grade: 0,
+    const fetchStudentGrade = async () => {
+      try {
+        const studentGrade = await getStudentGrade(alunoId)
+        const gradeWithFalta = studentGrade.map(disciplina => ({
+          ...disciplina,
+          novaFalta: { horas: '', data: new Date().toISOString().slice(0, 10) }
+        }));
+        setMySchedule(gradeWithFalta)
+      } catch (error) {
+        toast.error("Erro ao carregar disciplinas")
       }
-
-      scheduleItem.evaluations = [...(scheduleItem.evaluations || []), newEval]
-      newSchedule[classIndex] = scheduleItem
-      return newSchedule
+    };
+  
+    fetchStudentGrade()
+  }, [alunoId])
+  
+  function handleSaveChanges() {
+    Promise.all(mySchedule.map(disciplina => {
+      const { id, nome, codigo, descricao, sala, totalHoras, professor, periodo, obrigatoria } = disciplina;
+      return updateDisciplina(id, { nome, codigo, descricao, sala, totalHoras, professor, periodo, obrigatoria });
+    })).then(results => {
+      if (results.every(result => result !== null)) {
+        toast.success("Todas as disciplinas foram atualizadas com sucesso!")
+      } else {
+        toast.error("Algumas disciplinas não foram atualizadas corretamente.")
+      }
     })
   }
 
-  // Atualizar campos de uma avaliação específica
-  function handleUpdateEvaluation(classIndex: number, evalId: string, field: keyof Evaluation, value: any) {
-    setMySchedule((prev) => {
-      const newSchedule = [...prev]
-      const scheduleItem = { ...newSchedule[classIndex] }
+  function handleChangeField(index: number, field: keyof ScheduledClass | 'faltasHoras', value: any) {
+    setMySchedule(prev => {
+        const newSchedule = [...prev]
+        const updatedItem = { ...newSchedule[index] }
 
-      const updatedEvals = scheduleItem.evaluations.map((evaluation) => {
-        if (evaluation.id === evalId) {
-          return { ...evaluation, [field]: value }
+        if (field === "faltasHoras") {
+            updatedItem.faltas = updatedItem.faltas.map(falta => ({
+                ...falta,
+                horas: value
+            }));
+        } else if (field in updatedItem) {
+            (updatedItem as any)[field] = value
         }
-        return evaluation
-      })
 
-      scheduleItem.evaluations = updatedEvals
-      newSchedule[classIndex] = scheduleItem
-      return newSchedule
+        newSchedule[index] = updatedItem
+        return newSchedule
     })
+}
+
+function handleChangeFalta(index: number, value: string) {
+  setMySchedule(prev => {
+    const newSchedule = [...prev]
+    newSchedule[index].novaFalta.horas = value
+    return newSchedule
+  })
+}
+
+const handleAddFalta = async (index: number) => {
+  const disciplina = mySchedule[index]
+  const { id, novaFalta } = disciplina
+
+  if (novaFalta.horas.trim() === "") {
+    toast.error("Informe as horas da falta.")
+    return
   }
 
-  // Remover uma avaliação
-  function handleRemoveEvaluation(classIndex: number, evalId: string) {
-    setMySchedule((prev) => {
-      const newSchedule = [...prev]
-      const scheduleItem = { ...newSchedule[classIndex] }
-
-      scheduleItem.evaluations = scheduleItem.evaluations.filter((e) => e.id !== evalId)
-      newSchedule[classIndex] = scheduleItem
-      return newSchedule
+  try {
+    const response = await api.post(`/api/Disciplina/${id}/Aluno/${alunoId}/Falta`, {
+      horas: novaFalta.horas,
+      data: novaFalta.data,
+      motivo: "Absent"
     })
-  }
-
-  // Calcular média ponderada de uma disciplina
-  function getWeightedAverage(evaluations: Evaluation[]) {
-    if (!evaluations || evaluations.length === 0) return 0
-
-    let sumWeighted = 0
-    let sumWeights = 0
-    for (const ev of evaluations) {
-      sumWeighted += ev.grade * ev.weight
-      sumWeights += ev.weight
+    if (response.data) {
+      setMySchedule(prev => {
+        const newSchedule = [...prev]
+        newSchedule[index].faltas.push(response.data)
+        newSchedule[index].novaFalta.horas = ''
+        return newSchedule;
+      });
+      toast.success("Falta registrada com sucesso!")
     }
-
-    // Exemplo: se sumWeights for 0, retorna 0
-    return sumWeights > 0 ? sumWeighted / sumWeights : 0
+  } catch (error) {
+    toast.error("Erro ao registrar a falta.")
   }
+}
 
-  return (
+return (
     <>
       <Helmet title="Schedule" />
-
       <div className="flex flex-col items-center gap-8">
         <h1 className="text-3xl font-bold tracking-tight">Minha Grade de Disciplinas</h1>
 
@@ -138,103 +141,63 @@ export function Schedule() {
                 <TableHead>Período</TableHead>
                 <TableHead>Obrigatória?</TableHead>
                 <TableHead>Professor</TableHead>
-                <TableHead>Faltas</TableHead>
-                <TableHead>Avaliações</TableHead>
-                <TableHead>Média</TableHead>
+                <TableHead>Sala</TableHead>
+                <TableHead>Faltas (Horas)</TableHead>
+                <TableHead>Percentual de faltas</TableHead>
                 <TableHead></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mySchedule.map((item, index) => {
-                const weightedAvg = getWeightedAverage(item.evaluations || [])
-                
+              {mySchedule.map((item, index) => {                
                 return (
-                  <TableRow key={item.code}>
-                    <TableCell>{item.code}</TableCell>
-                    <TableCell>{item.name}</TableCell>
-                    <TableCell>{item.period}</TableCell>
-                    <TableCell>{item.mandatory}</TableCell>
+                  <TableRow key={item.id}>
+                    <TableCell>{item.codigo}</TableCell>
+                    <TableCell>{item.nome}</TableCell>
+                    <TableCell>{item.periodo}</TableCell>
+                    <TableCell>{item.obrigatoria ? "Obrigatória" : "Optativa"}</TableCell>
 
                     {/* Professor */}
                     <TableCell>
                       <Input
                         className="border px-2 py-1 w-28"
-                        value={item.teacher || ""}
-                        onChange={(e) => handleChangeField(index, "teacher", e.target.value)}
+                        value={item.professor || ""}
+                        onChange={(e) => handleChangeField(index, "professor", e.target.value)}
+                      />
+                    </TableCell>
+
+                    {/* Sala */}
+                    <TableCell>
+                      <Input
+                        className="border px-2 py-1 w-28"
+                        value={item.sala || ""}
+                        onChange={(e) => handleChangeField(index, "sala", e.target.value)}
                       />
                     </TableCell>
 
                     {/* Faltas */}
                     <TableCell>
-                      <Input
-                        type="number"
-                        min={0}
-                        className="border px-2 py-1 w-16"
-                        value={item.absences || 0}
-                        onChange={(e) => handleChangeField(index, "absences", Number(e.target.value))}
-                      />
-                    </TableCell>
-
-                    {/* Avaliações */}
-                    <TableCell colSpan={1}>
-                      <div className="flex flex-col gap-2">
-                        {(item.evaluations || []).map((evalObj) => (
-                          <div key={evalObj.id} className="flex items-center gap-2">
-                            {/* Nome da avaliação */}
-                            <Input
-                              className="border px-2 py-1 w-24"
-                              value={evalObj.name}
-                              onChange={(e) =>
-                                handleUpdateEvaluation(index, evalObj.id, "name", e.target.value)
-                              }
-                            />
-
-                            Peso:
-                            <Input
-                              type="number"
-                              min={0}
-                              className="border px-1 py-1 w-16"
-                              value={evalObj.weight}
-                              onChange={(e) =>
-                                handleUpdateEvaluation(index, evalObj.id, "weight", Number(e.target.value))
-                              }
-                            />
-
-                            Nota:
-                            <Input
-                              type="number"
-                              step="0.1"
-                              min={0}
-                              max={10}
-                              className="border px-1 py-1 w-16"
-                              value={evalObj.grade}
-                              onChange={(e) =>
-                                handleUpdateEvaluation(index, evalObj.id, "grade", Number(e.target.value))
-                              }
-                            />
-
-                            <Button
-                              variant="destructive"
-                              size="xs"
-                              onClick={() => handleRemoveEvaluation(index, evalObj.id)}
-                            >
-                              <Trash size={16} />
-                            </Button>
-                          </div>
-                        ))}
-
-                        <Button variant="outline" size="xs" onClick={() => handleAddEvaluation(index)}>
-                          + Avaliação
-                        </Button>
+                      <div className="flex flex-col">
+                        <span className="px-2 py-1">
+                          {item.faltas.reduce((acc, falta) => acc + parseFloat(falta.horas), 0).toFixed(0)}
+                        </span>
                       </div>
                     </TableCell>
 
-                    {/* Média Ponderada */}
                     <TableCell>
-                      {weightedAvg.toFixed(1)}
+                      {item.faltas && item.totalHoras > 0 ? `${(item.faltas.reduce((acc, falta) => acc + Number(falta.horas), 0) / item.totalHoras * 100).toFixed(2)}%` : "0%"}
                     </TableCell>
 
-                    <TableCell />
+                    <TableCell>
+                      <div className="mt-2 flex flex-row gap-2">
+                        <Input
+                          type="number"
+                          placeholder="Adicionar horas de falta"
+                          value={item.novaFalta.horas}
+                          onChange={e => handleChangeFalta(index, e.target.value)}
+                        />
+                        <Button size='default' onClick={() => handleAddFalta(index)}><Plus /></Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 )
               })}

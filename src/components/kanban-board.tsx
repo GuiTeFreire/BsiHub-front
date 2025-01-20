@@ -1,62 +1,106 @@
-import { useEffect, useMemo, useState } from "react";
-import { Column, Id, Task } from "@/types/types";
-import { ColumnContainer } from "./column-container";
+import { useEffect, useMemo, useState } from "react"
+import { Atividade, Column } from "@/types/types"
+import { ColumnContainer } from "./column-container"
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { arrayMove, SortableContext } from '@dnd-kit/sortable'
-import { createPortal } from "react-dom";
-import { TaskCard } from "./task-card";
-import { Button } from "./ui/button";
-import { toast } from "sonner";
+import { createPortal } from "react-dom"
+import { TaskCard } from "./task-card"
+import { toast } from "sonner"
+import { useMutation } from "@tanstack/react-query"
+import { z } from "zod"
+import { createTask, deleteTask, getTasks, updateTask } from "@/api/task"
 
 const columns: Column[] = [
     {
-        id: "1",
-        title: "A Fazer",
+        id: 1,
+        title: "Pendente",
         color: "#224dab"
     },
     {
-        id: "2",
-        title: "Em Andamento",
+        id: 2,
+        title: "Em Progresso",
         color: "#FBA94C"
     },
     {
-        id: "3",
-        title: "Feito",
+        id: 3,
+        title: "Concluída",
         color: "#00875F"
     }
 ]
 
+interface UpdateTaskBody {
+    alunoId: number;
+    disciplinaId: number;
+    notaId: number;
+    nome: string;
+    descricao: string;
+    dataEntrega: string;
+    status: string;
+  }
+
+export const createTaskForm = z.object({
+    nome: z.string(),
+    descricao: z.string(),
+    dataEntrega: z.string(),
+    status: z.string(),
+    alunoId: z.number(),
+    disciplinaId: z.number()
+})
+
+export type CreateTaskForm = z.infer<typeof createTaskForm>
+
 export function Board() {
-    const userId = localStorage.getItem("alunoLogadoId")
     const columnsId = useMemo(() => columns.map(columns => columns.id), [columns])
 
-    const [tasks, setTasks] = useState<Task[]>([])
+    const [tasks, setTasks] = useState<Atividade[]>([])
     const [activeColumn, setActiveColumn] = useState<Column | null >(null)
-    const [activeTask, setActiveTask] = useState<Task | null>(null)
+    const [activeTask, setActiveTask] = useState<Atividade | null>(null)
+
+    const storedUser = localStorage.getItem("alunoLogado")
+    const user = storedUser ? JSON.parse(storedUser) : null
+    const alunoId = user?.id
 
     useEffect(() => {
-        const stored = localStorage.getItem(`board:${userId}`);
-        if (stored) {
-        setTasks(JSON.parse(stored));
+        const fetchTasks = async () => {
+            try {
+                const fetchedTasks = await getTasks(alunoId)
+                setTasks(fetchedTasks)
+                console.log("Tarefas:", tasks)
+            } catch (error) {
+                toast.error("Erro ao carregar as tarefas")
+            }
         }
-    }, [userId]);
     
-    useEffect(() => {
-        const storedTasks = localStorage.getItem(`tasks-${userId}`);
-        if (storedTasks) {
-          setTasks(JSON.parse(storedTasks));
+        if (alunoId) {
+            fetchTasks()
         }
-    }, [userId]);
+    }, [alunoId])
+    
+    const { mutateAsync: createTaskFn } = useMutation({
+        mutationFn: createTask
+    })
+
+    async function handleCreateTask(taskDetails: CreateTaskForm) {
+        try {
+            await createTaskFn({
+                nome: taskDetails.nome,
+                descricao: taskDetails.descricao,
+                dataEntrega: taskDetails.dataEntrega,
+                status: taskDetails.status,
+                alunoId: taskDetails.alunoId,
+                disciplinaId: taskDetails.disciplinaId
+            })
+            toast.success('Tarefa criada com sucesso!');
+        } catch (error) {
+            toast.error('Erro ao criar a tarefa');
+        }
+    }
 
     const sensors = useSensors(useSensor(PointerSensor, {
         activationConstraint: {
             distance: 3,
         }
     }))
-
-    function generateId() {
-        return Math.random().toString(36).substr(2, 9)
-    }
 
     function onDragStart(event: DragStartEvent) {
         if (event.active.data.current?.type === "Column") {
@@ -84,73 +128,101 @@ export function Board() {
         if (activeColumnId === overColumnId) return
     }
 
-    function onDragOver(event: DragEndEvent) {
-        const {active, over} = event
-        if (!over) return
-
-        const activeId = active.id
-        const overId = over.id
-
-        if (activeId === overId) return
-
-        const isActiveATask = active.data.current?.type === "Task"
-        const isOverATask = over.data.current?.type === "Task"
-        const isOverAColumn = over.data.current?.type === "Column"
-
-        if (isActiveATask && isOverATask) {
-            setTasks(tasks => {
-                const activeIndex = tasks.findIndex(t => t.id === activeId)
-                const overIndex = tasks.findIndex(t => t.id === overId)
-
-                tasks[activeIndex].columnId = tasks[overIndex].columnId
-
-                return arrayMove(tasks, activeIndex, overIndex)
-            })
-        }
-        
-
+    async function onDragOver(event: DragEndEvent) {
+        const { active, over } = event;
+        if (!over) return;
+    
+        const activeId = active.id;
+        const overId = over.id;
+    
+        if (activeId === overId) return;
+    
+        const isActiveATask = active.data.current?.type === "Task";
+        const isOverAColumn = over.data.current?.type === "Column";
+    
         if (isActiveATask && isOverAColumn) {
-            setTasks(tasks => {
-                const activeIndex = tasks.findIndex(t => t.id === activeId)
-                
-                tasks[activeIndex].columnId = overId
-
-                return arrayMove(tasks, activeIndex, activeIndex)
-            })
+            const updatedStatus =
+                over.id === 1
+                    ? "pendente"
+                    : over.id === 2
+                    ? "em progresso"
+                    : "concluida";
+    
+            setTasks((tasks) =>
+                tasks.map((task) =>
+                    task.id === active.id
+                        ? { ...task, status: updatedStatus }
+                        : task
+                )
+            );
+    
+            try {
+                const taskId = Number(active.id); // Certifique-se de que é um número
+                const taskToUpdate = tasks.find((task) => task.id === taskId);
+    
+                if (!taskToUpdate) {
+                    console.error("Tarefa não encontrada para o ID:", taskId);
+                    toast.error("Tarefa não encontrada!");
+                    return;
+                }
+    
+                // Adicione verificações para os objetos aninhados
+                const alunoId = taskToUpdate.aluno?.id || 0; // Valor padrão caso esteja ausente
+                const disciplinaId = taskToUpdate.disciplina?.id || 0;
+                const notaId = taskToUpdate.nota?.id || 0;
+    
+                // Preencher o corpo da requisição com os valores existentes
+                const updateBody = {
+                    alunoId,
+                    disciplinaId,
+                    notaId,
+                    nome: taskToUpdate.nome,
+                    descricao: taskToUpdate.descricao,
+                    dataEntrega: taskToUpdate.dataEntrega,
+                    status: updatedStatus,
+                };
+    
+                console.log("Dados enviados para atualização:", updateBody);
+    
+                await updateTask(taskId, updateBody);
+    
+                toast.success("Tarefa atualizada com sucesso!");
+            } catch (error) {
+                console.error("Erro na atualização:", error);
+                toast.error("Erro ao atualizar o status da tarefa");
+            }
         }
     }
+    
+    
+    
 
-    function createTask(columnId: Id) {
-        const newTask: Task = {
-            id: generateId(),
-            columnId,
-            content: `Tarefa ${tasks.length + 1}`,
-            discipline: "",
-            deadline: "",
+    async function handleDeleteTask(id: number) {
+        try {
+          await deleteTask(id);
+          toast.success("Tarefa deletada com sucesso!");
+          const fetchedTasks = await getTasks(alunoId);
+          setTasks(fetchedTasks);
+        } catch (error) {
+          toast.error("Erro ao deletar tarefa");
         }
+      }
+      
 
-        setTasks([...tasks, newTask])
-    }
-
-    function deleteTask(id: Id) {
-        setTasks(tasks.filter(task => task.id !== id))
-    }
-
-    function updateTask(id: Id, partial: Partial<Task>) {
-        setTasks(prev => prev.map(task => {
-          if (task.id !== id) return task
-          return { ...task, ...partial }
-        }))
-    }
-
-    const saveTasks = () => {
-        localStorage.setItem(`tasks-${userId}`, JSON.stringify(tasks));
-        toast.success('Alterações salvas com sucesso!');
-    };
+      async function handleUpdateTask(id: number, partial: Partial<UpdateTaskBody>) {
+        try {
+          await updateTask(id, partial as UpdateTaskBody);
+          toast.success("Tarefa atualizada com sucesso!");
+          const fetchedTasks = await getTasks(alunoId);
+          setTasks(fetchedTasks);
+        } catch (error) {
+          toast.error("Erro ao atualizar tarefa");
+        }
+      }
+      
       
     return (
         <div className="flex flex-col gap-4 justify-center items-center">
-            <Button onClick={saveTasks} className="mb-2 w-3/5">Salvar Alterações</Button>
             <div className="m-auto flex w-full items-center overflow-x-auto overflow-y-hidden px-[40px]">  
                 <DndContext 
                     sensors={sensors} 
@@ -164,10 +236,15 @@ export function Board() {
                                 <ColumnContainer 
                                     key={column.id} 
                                     column={column}
-                                    createTask={createTask}
-                                    deleteTask={deleteTask}
-                                    updateTask={updateTask}
-                                    tasks={tasks.filter(task => task.columnId === column.id)}/>
+                                    createTask={handleCreateTask}
+                                    deleteTask={handleDeleteTask}
+                                    updateTask={handleUpdateTask}
+                                    tasks={tasks.filter(task => {
+                                        if (column.id === 1) return task.status === "pendente"
+                                        if (column.id === 2) return task.status === "em progresso"
+                                        if (column.id === 3) return task.status === "concluida"
+                                        return false
+                                    })}/>
                             ))}
                             </SortableContext>
                         </div>
@@ -178,16 +255,21 @@ export function Board() {
                         {activeColumn && (
                             <ColumnContainer 
                                 column={activeColumn}
-                                createTask={createTask}
+                                createTask={handleCreateTask}
                                 deleteTask={deleteTask}
-                                updateTask={updateTask}
-                                tasks={tasks.filter(task => task.columnId === activeColumn.id)} />
+                                updateTask={handleUpdateTask}
+                                tasks={tasks.filter(task => {
+                                    if (activeColumn.id === 1) return task.status === "pendente"
+                                    if (activeColumn.id === 2) return task.status === "em progresso"
+                                    if (activeColumn.id === 3) return task.status === "concluida"
+                                    return false
+                                })} />
                         )}
                         {
                             activeTask && (
                                 <TaskCard 
                                     task={activeTask} 
-                                    updateTask={updateTask} 
+                                    updateTask={handleUpdateTask} 
                                     deleteTask={deleteTask} />
                             )
                         }

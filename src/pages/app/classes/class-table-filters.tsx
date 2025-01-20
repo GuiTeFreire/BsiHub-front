@@ -115,6 +115,7 @@ export function ClassTableFilters() {
                 <SelectItem value="6">6º</SelectItem>
                 <SelectItem value="7">7º</SelectItem>
                 <SelectItem value="8">8º</SelectItem>
+                <SelectItem value="0">Optativa</SelectItem>
               </SelectContent>
             </Select>
           );

@@ -7,7 +7,7 @@ import { ToDoList } from './pages/app/todo-list'
 import { Classes } from './pages/app/classes/classes'
 import { AppLayout } from './pages/_layouts/app'
 import { AuthLayout } from './pages/_layouts/auth'
-import { ProtectedRoute } from './components/router/ProtectedRoute'
+import { ProtectedRoute } from './components/session/ProtectedRoute'
 import { Schedule } from './pages/app/schedule'
 
 export const router = createBrowserRouter([

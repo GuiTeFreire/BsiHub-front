@@ -37,7 +37,6 @@ export function SignIn() {
             const userData = await authenticate({ matricula: data.matricula, senha: data.password })
             localStorage.setItem("alunoLogado", JSON.stringify(userData.aluno))
             localStorage.setItem("alunoLogadoId", userData.aluno.id)
-            console.log(userData.aluno.id)
 
             const durationMs = 30 * 60 * 1000;
             const expiresAt = Date.now() + durationMs;
