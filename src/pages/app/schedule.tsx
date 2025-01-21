@@ -74,8 +74,7 @@ export function Schedule() {
     setMySchedule(prev => {
         const newSchedule = [...prev]
         const updatedItem = { ...newSchedule[index] }
-
-        if (field === "faltasHoras") {
+                if (field === "faltasHoras") {
             updatedItem.faltas = updatedItem.faltas.map(falta => ({
                 ...falta,
                 horas: value
@@ -116,6 +115,13 @@ const handleAddFalta = async (index: number) => {
       setMySchedule(prev => {
         const newSchedule = [...prev]
         newSchedule[index].faltas.push(response.data)
+
+        if(newSchedule[index].faltas.length > 0) {
+          const faltasLength = newSchedule[index].faltas.length
+          if(newSchedule[index].faltas[faltasLength - 1] === newSchedule[index].faltas[faltasLength - 2]) {
+            newSchedule[index].faltas.pop()
+          }}
+        
         newSchedule[index].novaFalta.horas = ''
         return newSchedule;
       });

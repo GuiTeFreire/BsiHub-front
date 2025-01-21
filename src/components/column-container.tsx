@@ -3,14 +3,14 @@ import { Button } from "./ui/button"
 import { Plus } from "lucide-react"
 import { SortableContext, useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { TaskCard } from "./task-card"
 import { CreateTaskForm } from "./kanban-board"
 import { Input } from "./ui/input"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog"
 import { getStudentGrade } from "@/api/get-student-class"
 import { toast } from "sonner"
-import { getTasks } from "@/api/task"
+import { Label } from "./ui/label"
 
 interface Props {
     column: Column
@@ -93,7 +93,7 @@ export interface ScheduledClass {
                 style={style}
                 className="flex flex-col gap-4 w-[550px] min-w-[550px] h-[750px] max-h-[750px] bg-secondary rounded-md border-2 border-muted-foreground opacity-30"
             ></div>
-        );
+        )
     }
 
     const handleSubmit = () => {
@@ -105,9 +105,9 @@ export interface ScheduledClass {
             status,
             alunoId: alunoId,
             disciplinaId,
-        };
-        createTask(taskDetails);
-    };
+        }
+        createTask(taskDetails)
+    }
 
     return (
         <div
@@ -155,31 +155,31 @@ export interface ScheduledClass {
                         <DialogTitle>Adicionar Nova Tarefa</DialogTitle>
                     </DialogHeader>
                     <DialogDescription>
-                        <label className="block mb-2">
+                        <Label className="block mb-2">
                             Nome:
                             <Input
                                 value={nome}
                                 onChange={(e) => setNome(e.target.value)}
                                 placeholder="Nome da Tarefa"
                             />
-                        </label>
-                        <label className="block mb-2">
+                        </Label>
+                        <Label className="block mb-2">
                             Descrição:
                             <Input
                                 value={descricao}
                                 onChange={(e) => setDescricao(e.target.value)}
                                 placeholder="Descrição da Tarefa"
                             />
-                        </label>
-                        <label className="block mb-2">
+                        </Label>
+                        <Label className="block mb-2">
                             Data de Entrega:
                             <Input
                                 type="date"
                                 value={dataEntrega}
                                 onChange={(e) => setDataEntrega(e.target.value)}
                             />
-                        </label>
-                        <label className="block mb-2">
+                        </Label>
+                        <Label className="block mb-2">
                             Status:
                             <select
                                 value={status}
@@ -190,8 +190,8 @@ export interface ScheduledClass {
                                 <option value="em progresso">Em Progresso</option>
                                 <option value="concluída">Concluída</option>
                             </select>
-                        </label>
-                        <label className="block mb-2">
+                        </Label>
+                        <Label className="block mb-2">
                             Disciplina:
                             <select
                                 value={disciplinaId}
@@ -205,13 +205,15 @@ export interface ScheduledClass {
                                     </option>
                                 ))}
                             </select>
-                        </label>
-                        <Button
-                            onClick={handleSubmit}
-                            className="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white rounded p-2"
-                        >
-                            Salvar Tarefa
-                        </Button>
+                        </Label>
+                        <DialogTrigger asChild>
+                            <Button
+                                onClick={handleSubmit}
+                                className="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white rounded p-2"
+                            >
+                                Salvar Tarefa
+                            </Button>
+                        </DialogTrigger>
                     </DialogDescription>
                 </DialogContent>
             </Dialog>

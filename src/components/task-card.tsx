@@ -1,10 +1,11 @@
 import { Button } from "./ui/button"
-import { Trash } from "lucide-react"
+import { Expand, Trash } from "lucide-react"
 import { useState } from "react"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { Input } from "./ui/input"
 import { Atividade } from "@/types/types"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog"
+import { Label } from "./ui/label"
 
 interface Props {
   task: Atividade
@@ -12,17 +13,15 @@ interface Props {
   updateTask: (id: number, partial: Partial<Atividade>) => void
 }
 
-export function TaskCard({ task, deleteTask, updateTask }: Props) {
+export function TaskCard({ task, deleteTask }: Props) {
   const [mouseIsOver, setMouseIsOver] = useState(false)
-  const [editMode, setEditMode] = useState(false)
 
   const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
-    id: task.id,
+    id: task.id ?? "unknown",
     data: {
       type: "Task",
       task,
-    },
-    disabled: editMode,
+    }
   })
 
   const style = {
@@ -41,9 +40,13 @@ export function TaskCard({ task, deleteTask, updateTask }: Props) {
     return diffDays < 7
   }
 
-  function toggleEditMode() {
-    setEditMode((prev) => !prev)
-    setMouseIsOver(false)
+  const handleDeleteTask = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation()
+    if (task.id) {
+      deleteTask(task.id)
+    } else {
+      console.error("Tarefa sem ID não pode ser deletada")
+    }
   }
 
   if (isDragging) {
@@ -56,46 +59,6 @@ export function TaskCard({ task, deleteTask, updateTask }: Props) {
     )
   }
 
-  if (editMode) {
-    const isOverdueSoon = checkIfOverdueSoon(task.dataEntrega)
-
-    return (
-      <div
-        ref={setNodeRef}
-        style={style}
-        {...attributes}
-        {...listeners}
-        className="relative cursor-grab bg-background p-2.5 min-h-[140px] flex flex-col text-left rounded-xl hover:ring-2 hover:ring-inset hover:ring-ring gap-2"
-      >
-        <textarea
-          className="border-none bg-transparent focus:outline-none resize-none h-[60px]"
-          value={task.descricao}
-          autoFocus
-          placeholder="Digite o conteúdo da tarefa..."
-          onChange={(e) => updateTask(task.id, { descricao: e.target.value })}
-        />
-
-        <Input
-          type="date"
-          className="border px-2 py-1 rounded focus:outline-none"
-          style={{ color: isOverdueSoon ? "red" : "inherit" }}
-          value={task.dataEntrega ?? ""}
-          onChange={(e) => updateTask(task.id, { dataEntrega: e.target.value })}
-        />
-
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => {
-            toggleEditMode()
-          }}
-        >
-          Fechar
-        </Button>
-      </div>
-    )
-  }
-
   const isOverdueSoon = checkIfOverdueSoon(task.dataEntrega)
 
   return (
@@ -104,13 +67,12 @@ export function TaskCard({ task, deleteTask, updateTask }: Props) {
       style={style}
       {...attributes}
       {...listeners}
-      onClick={toggleEditMode}
       className="relative cursor-grab bg-background p-2.5 min-h-[100px] flex flex-col text-left rounded-xl hover:ring-2 hover:ring-inset hover:ring-ring"
       onMouseEnter={() => setMouseIsOver(true)}
       onMouseLeave={() => setMouseIsOver(false)}
     >
       <p className="mb-1 overflow-x-hidden overflow-y-auto whitespace-pre-wrap">
-        {task.descricao}
+        {task.descricao || "Sem descrição"}
       </p>
 
       {task.disciplina && (
@@ -124,22 +86,50 @@ export function TaskCard({ task, deleteTask, updateTask }: Props) {
           className="text-sm"
           style={{ color: isOverdueSoon ? "red" : "inherit" }}
         >
-          Prazo: {task.dataEntrega}
+          Prazo: {task.dataEntrega.split("T")[0]}
         </p>
       )}
 
       {mouseIsOver && (
-        <Button
-          onClick={(e) => {
-            e.stopPropagation()
-            deleteTask(task.id)
-          }}
-          className="absolute right-6 top-2"
-          variant="destructive"
-          size="sm"
-        >
-          <Trash />
+        <><Button onClick={handleDeleteTask} className="absolute right-6 top-14"variant="destructive" size="sm">
+            <Trash />
         </Button>
+
+        <Dialog>
+            <DialogTrigger asChild>
+                <Button variant="secondary" className="absolute right-6 top-2" size="sm">
+                    <Expand />
+                </Button>
+            </DialogTrigger>
+
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Detalhes da tarefa</DialogTitle>
+                </DialogHeader>
+
+                <DialogDescription>
+                    <div className="flex flex-col gap-4 py-4">
+                        <div className="flex flex-row items-center gap-4">
+                            <Label htmlFor="nome" className="text-right">Nome</Label>
+                            {task.nome}
+                        </div>
+                        <div className="flex flex-row items-center gap-4">
+                            <Label htmlFor="decricao" className="text-right">Descrição</Label>
+                            {task.descricao}
+                        </div>
+                        <div className="flex flex-row items-center gap-4">
+                            <Label htmlFor="dataEntrega" className="text-right">Data de Entrega</Label>
+                            {task.dataEntrega.split("T")[0]}
+                        </div>
+                        <div className="flex flex-row items-center gap-4">
+                            <Label htmlFor="disciplina" className="text-right">Disciplina</Label>
+                            {task.disciplina.nome}
+                        </div>
+                    </div>
+                </DialogDescription>
+            </DialogContent>
+        </Dialog>
+        </>
       )}
     </div>
   )

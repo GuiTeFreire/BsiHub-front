@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react"
 import { Atividade, Column } from "@/types/types"
 import { ColumnContainer } from "./column-container"
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
-import { arrayMove, SortableContext } from '@dnd-kit/sortable'
+import { SortableContext } from '@dnd-kit/sortable'
 import { createPortal } from "react-dom"
 import { TaskCard } from "./task-card"
 import { toast } from "sonner"
@@ -31,7 +31,7 @@ const columns: Column[] = [
 interface UpdateTaskBody {
     alunoId: number;
     disciplinaId: number;
-    notaId: number;
+    notaId: any;
     nome: string;
     descricao: string;
     dataEntrega: string;
@@ -65,7 +65,6 @@ export function Board() {
             try {
                 const fetchedTasks = await getTasks(alunoId)
                 setTasks(fetchedTasks)
-                console.log("Tarefas:", tasks)
             } catch (error) {
                 toast.error("Erro ao carregar as tarefas")
             }
@@ -82,7 +81,7 @@ export function Board() {
 
     async function handleCreateTask(taskDetails: CreateTaskForm) {
         try {
-            await createTaskFn({
+          const newTask = await createTaskFn({
                 nome: taskDetails.nome,
                 descricao: taskDetails.descricao,
                 dataEntrega: taskDetails.dataEntrega,
@@ -90,7 +89,7 @@ export function Board() {
                 alunoId: taskDetails.alunoId,
                 disciplinaId: taskDetails.disciplinaId
             })
-            toast.success('Tarefa criada com sucesso!');
+            setTasks([...tasks, newTask] as any) 
         } catch (error) {
             toast.error('Erro ao criar a tarefa');
         }
@@ -146,7 +145,7 @@ export function Board() {
                     ? "pendente"
                     : over.id === 2
                     ? "em progresso"
-                    : "concluida";
+                    : "concluída";
     
             setTasks((tasks) =>
                 tasks.map((task) =>
@@ -158,20 +157,18 @@ export function Board() {
     
             try {
                 const taskId = Number(active.id); // Certifique-se de que é um número
-                const taskToUpdate = tasks.find((task) => task.id === taskId);
+                const taskToUpdate = tasks.find((task) => task.id === taskId)
     
                 if (!taskToUpdate) {
-                    console.error("Tarefa não encontrada para o ID:", taskId);
-                    toast.error("Tarefa não encontrada!");
+                    console.error("Tarefa não encontrada para o ID:", taskId)
+                    toast.error("Tarefa não encontrada!")
                     return;
                 }
     
-                // Adicione verificações para os objetos aninhados
-                const alunoId = taskToUpdate.aluno?.id || 0; // Valor padrão caso esteja ausente
-                const disciplinaId = taskToUpdate.disciplina?.id || 0;
-                const notaId = taskToUpdate.nota?.id || 0;
+                const alunoId = taskToUpdate.aluno?.id || 0
+                const disciplinaId = taskToUpdate.disciplina?.id || 0
+                const notaId = taskToUpdate.nota?.id || null
     
-                // Preencher o corpo da requisição com os valores existentes
                 const updateBody = {
                     alunoId,
                     disciplinaId,
@@ -182,14 +179,14 @@ export function Board() {
                     status: updatedStatus,
                 };
     
-                console.log("Dados enviados para atualização:", updateBody);
+                console.log("Dados enviados para atualização:", updateBody)
     
-                await updateTask(taskId, updateBody);
+                await updateTask(taskId, updateBody as any)
     
-                toast.success("Tarefa atualizada com sucesso!");
+                toast.success("Tarefa atualizada com sucesso!")
             } catch (error) {
-                console.error("Erro na atualização:", error);
-                toast.error("Erro ao atualizar o status da tarefa");
+                console.error("Erro na atualização:", error)
+                toast.error("Erro ao atualizar o status da tarefa")
             }
         }
     }
@@ -199,24 +196,24 @@ export function Board() {
 
     async function handleDeleteTask(id: number) {
         try {
-          await deleteTask(id);
-          toast.success("Tarefa deletada com sucesso!");
-          const fetchedTasks = await getTasks(alunoId);
-          setTasks(fetchedTasks);
+          await deleteTask(id)
+          toast.success("Tarefa deletada com sucesso!")
+          const fetchedTasks = await getTasks(alunoId)
+          setTasks(fetchedTasks)
         } catch (error) {
-          toast.error("Erro ao deletar tarefa");
+          toast.error("Erro ao deletar tarefa")
         }
       }
       
 
       async function handleUpdateTask(id: number, partial: Partial<UpdateTaskBody>) {
         try {
-          await updateTask(id, partial as UpdateTaskBody);
-          toast.success("Tarefa atualizada com sucesso!");
-          const fetchedTasks = await getTasks(alunoId);
-          setTasks(fetchedTasks);
+          await updateTask(id, partial as UpdateTaskBody)
+          toast.success("Tarefa atualizada com sucesso!")
+          const fetchedTasks = await getTasks(alunoId)
+          setTasks(fetchedTasks)
         } catch (error) {
-          toast.error("Erro ao atualizar tarefa");
+          toast.error("Erro ao atualizar tarefa")
         }
       }
       
@@ -242,7 +239,7 @@ export function Board() {
                                     tasks={tasks.filter(task => {
                                         if (column.id === 1) return task.status === "pendente"
                                         if (column.id === 2) return task.status === "em progresso"
-                                        if (column.id === 3) return task.status === "concluida"
+                                        if (column.id === 3) return task.status === "concluída"
                                         return false
                                     })}/>
                             ))}
@@ -261,7 +258,7 @@ export function Board() {
                                 tasks={tasks.filter(task => {
                                     if (activeColumn.id === 1) return task.status === "pendente"
                                     if (activeColumn.id === 2) return task.status === "em progresso"
-                                    if (activeColumn.id === 3) return task.status === "concluida"
+                                    if (activeColumn.id === 3) return task.status === "concluída"
                                     return false
                                 })} />
                         )}

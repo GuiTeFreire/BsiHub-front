@@ -65,7 +65,7 @@ interface Atividade {
   }
 
 export async function createTask(taskDetails: CreateTaskBody) {
-    await api.post('/api/Atividade', {
+   const task= await api.post('/api/Atividade', {
         nome: taskDetails.nome,
         descricao: taskDetails.descricao,
         dataEntrega: taskDetails.dataEntrega,
@@ -73,14 +73,25 @@ export async function createTask(taskDetails: CreateTaskBody) {
         alunoId: taskDetails.alunoId,
         disciplinaId: taskDetails.disciplinaId,
     })
+
+    return task.data
 }
 
 export async function deleteTask(id: number) {
     await api.delete(`/api/Atividade/${id}`)
 }
 
-export async function updateTask(id: number, updateData: Partial<UpdateTaskBody>): Promise<void> {
-    await api.put(`/api/Atividade/${id}`, updateData)
+export async function updateTask(
+    id: number,
+    updateData: UpdateTaskBody
+): Promise<void> {
+    try { 
+        console.log("Dados enviados para atualização mary:", updateData, 'id:', id);
+        await api.put(`/api/Atividade/${id}`, {...updateData });
+    } catch (error: any) {
+        console.error("Erro na atualização da tarefa:", error.response?.data || error.message);
+        throw error;
+    }
 }
 
 
